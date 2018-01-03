@@ -133,7 +133,9 @@
 
         let num = [30, 1000, 1000, 1000, 1000]
         fib.forEach((func, i) => {
+            //驗證
             console.log(`validate fib[${i}]:` + validationFunc(func))
+            //印出相對應num[i]的費氏值
             console.log(`fib[${i}(${num[i]}):` + func(num[i]))
         })
 
