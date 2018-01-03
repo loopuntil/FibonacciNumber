@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<!-- HTML5 Hello world by kirupa - http://www.kirupa.com/html5/getting_your_feet_wet_html5_pg1.htm -->
+<html lang="en-us">
+
+<head>
+    <meta charset="utf-8">
+    <title>Hello...</title>
+    <style type="text/css">
+    </style>
+</head>
+
+<body>
+
+    <script>
+        /*
+        驗證傳入費氏數列方法是正確，驗證到第十位，如果錯誤拋出異常
+        */
+        let validationFunc = (func) => {
+            const list = [0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55]
+            for (let i = 0; i <= 10; i++) {
+                if (func(i) !== list[i]) {
+                    throw new Error(`validate Error!`);
+                }
+            }
+            return true
+        }
+
+        //用來放費氏數列的方法    
+        let fib = []
+
+        //遞迴解，最常見的解法，但是要小心堆疊溢位    
+        fib[0] = n => {
+            if (n < 2) {
+                return n
+            }
+            return fib[0](n - 1) + fib[0](n - 2)
+        }
+
+        //使用迴圈解，但是注意，這邊的cache變數每次執行都會歸零，並不是真的cache
+        fib[1] = n => {
+            let cache = [];
+            for (let i = 0; i <= n; i++) {
+                if (i < 2) {
+                    //f(0) = 0, f(1) = 1
+                    cache[i] = i
+                    continue
+                }
+                //f(i) = f(i-1) + f(i-2)
+                cache[i] = cache[i - 1] + cache[i - 2]
+            }
+            return cache[n]
+        }
+
+        //必須使用必包(Closure)，將cache變數值保留，這樣下次計算過的值就不用重新計算
+        fib[2] = (() => {
+            //預先填入f(0)與f(1)的值
+            let cache = [0, 1]
+            return n => {
+                if (n < 2) {
+                    return n
+                }
+                //如果有值(代表之前計算過，直接回傳)
+                if (cache[n]) {
+                    return cache[n]
+                }
+                //跑迴圈從2開始計算，因為是算到n位，所以i<=n
+                for (let i = 2; i <= n; i++) {
+                    //計算cache一直加到n，但是因為cache[i]有可能之前計算過，所以如果有值就continue
+                    if (cache[i]) {
+                        continue
+                    }
+                    cache[i] = cache[i - 1] + cache[i - 2]
+                }
+                return cache[n]
+            }
+        })()
+
+        //這邊使用es6 Generator 函數語法，一樣沒有cache機制
+        fib[3] = n => {
+            //function* 代表Generator 函數
+            let getFib = function* (_n) {
+                //我們知道費氏數列是前兩項加總，所以只要兩個起始變數就夠了
+                let pre = 0, cur = 1
+                for (let i = 0; i <= _n; i++) {
+                    if (i < 2) {
+                        //產出i
+                        yield i
+                        continue
+                    }
+                    //es6 可用下列方法改變變數值，例如交換變數a,b值，可用[a, b] = [b, c]
+                    [pre, cur] = [cur, pre + cur];
+                    //cur就是我們要產出的值
+                    yield cur
+                }
+            }
+            //將generator function 展開成陣列 
+            let fibAry = [...getFib(n)]
+            //回傳最後值
+            return fibAry.pop()
+        }
+        //將上面的方法改良，加入cache機制
+        fib[4] = (() => {
+            let getDefFib = function* (n) {
+                let pre = 0, cur = 1
+                for (let i = 0; i <= n; i++) {
+                    if (i < 2) {
+                        yield i
+                        continue
+                    }
+                    [pre, cur] = [cur, pre + cur]
+                    yield cur
+                }
+            }
+            //先產生一定數目的費氏數列當作快取
+            let fibAry = [...getDefFib(5)]
+            //這是擴充陣列的方法
+            let extendArray = n => {
+                for (let i = fibAry.length; i <= n; i++) {
+                    fibAry[i] = fibAry[i - 1] + fibAry[i - 2]
+                }
+            }
+            //最後回傳的方法
+            return n => {
+                if (n < 2) {
+                    return n
+                }
+                if (n > (fibAry.length - 1)) {
+                    extendArray(n)
+                }
+                return fibAry[n]
+            }
+        })()
+
+        let num = [30, 1000, 1000, 1000, 1000]
+        fib.forEach((func, i) => {
+            console.log(`validate fib[${i}]:` + validationFunc(func))
+            console.log(`fib[${i}(${num[i]}):` + func(num[i]))
+        })
+
+
+    </script>
+
+</body>
+
+</html>
